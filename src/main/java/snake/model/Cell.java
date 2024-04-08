@@ -1,20 +1,22 @@
 package snake.model;
 
+import java.awt.*;
+
 public enum Cell
 {
-    EMPTY     (' '),
-    WALL      ('\u2588'), // █
-    FOOD      ('@'), // @
-    SNAKE_HEAD('O'), // O
-    SNAKE_BODY('*'), // *
-    SNAKE_TAIL('x'); // x
+    EMPTY     (Color.GREEN),
+    WALL      (Color.DARK_GRAY), // █
+    FOOD      (Color.PINK), // @
+    SNAKE_HEAD(Color.RED), // O
+    SNAKE_BODY(Color.BLUE), // *
+    SNAKE_TAIL(Color.YELLOW); // x
 
-    private final char display;
+    private final Color color;
 
-    Cell(char display)
+    Cell(Color color)
     {
-        this.display = display;
+        this.color = color;
     }
 
-    public char getDisplay(){ return this.display; }
+    public Color getColor(){ return this.color; }
 }
