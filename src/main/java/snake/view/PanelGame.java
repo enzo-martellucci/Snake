@@ -2,33 +2,41 @@ package snake.view;
 
 import snake.Controller;
 import snake.model.Cell;
+import snake.model.Direction;
 import snake.model.Game;
 
 import javax.swing.*;
 
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.ActionEvent;
 
 import static snake.view.FrameGame.SCREEN;
 
 public class PanelGame extends JPanel
 {
-    private Controller ctrl;
-    private Game game;
+    private final Controller ctrl;
+    private final Game game;
 
     public PanelGame(Controller ctrl, Game game)
     {
         this.ctrl = ctrl;
         this.game = game;
 
+        InputMap inputMap = this.getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke("UP"), "UP");
+        inputMap.put(KeyStroke.getKeyStroke("DOWN"), "DOWN");
+        inputMap.put(KeyStroke.getKeyStroke("LEFT"), "LEFT");
+        inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "RIGHT");
+        ActionMap actionMap = this.getActionMap();
+        actionMap.put("UP", new MoveAction(() -> this.ctrl.move(Direction.UP)));
+        actionMap.put("DOWN", new MoveAction(() -> this.ctrl.move(Direction.DOWN)));
+        actionMap.put("LEFT", new MoveAction(() -> this.ctrl.move(Direction.LEFT)));
+        actionMap.put("RIGHT", new MoveAction(() -> this.ctrl.move(Direction.RIGHT)));
+
         int size = (int) (Math.min(SCREEN.width, SCREEN.height) * 0.7);
         this.setPreferredSize(new Dimension(size, size));
 
         this.setBackground(Color.WHITE);
-
-        this.requestFocus();
-        this.addKeyListener(new GameKeyListener());
     }
 
     @Override
@@ -48,12 +56,19 @@ public class PanelGame extends JPanel
             }
     }
 
-    private static class GameKeyListener extends KeyAdapter
+    private static class MoveAction extends AbstractAction
     {
-        @Override
-        public void keyPressed(KeyEvent e)
+        private final Runnable action;
+
+        public MoveAction(Runnable action)
         {
-            System.out.println("Key : " + e.getKeyChar());
+            this.action = action;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            this.action.run();
         }
     }
 }
