@@ -26,6 +26,6 @@ public class FrameGame extends JFrame
 
     public void refreshGame()
     {
-        this.panelGame.repaint();
+        this.panelGame.refresh();
     }
 }

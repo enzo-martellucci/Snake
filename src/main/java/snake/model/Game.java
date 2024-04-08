@@ -2,54 +2,49 @@ package snake.model;
 
 import java.util.*;
 
+import static snake.model.Direction.RIGHT;
+
 public class Game
 {
     private static final Random R = new Random();
 
 
-    private Cell[][] grid;
-    private Deque<Position> snake;
+    private int nbRow;
+    private int nbCol;
 
-    private Direction currentDirection;
-    private Direction nextDirection;
+    private Set<Position> empty;
+    private Position food;
+
+    private BodyPart head;
+    private Deque<BodyPart> body;
+    private BodyPart tail;
 
     private boolean isAlive;
     private boolean isGrowing;
 
-    public Game()
+    private Direction nextDirection;
+
+
+    public Game(int nbRow, int nbCol)
     {
-        this.grid = new Cell[21][21];
-        for (int r = 0; r < this.grid.length; r++)
-        {
-            this.grid[r][0] = Cell.WALL;
-            this.grid[r][this.grid[r].length - 1] = Cell.WALL;
-        }
+        this.nbRow = nbRow;
+        this.nbCol = nbCol;
 
-        for (int c = 1; c < this.grid[0].length - 1; c++)
-        {
-            this.grid[0][c] = Cell.WALL;
-            this.grid[this.grid.length - 1][c] = Cell.WALL;
-        }
+        this.empty = new HashSet<>();
+        for (int r = 0; r < this.nbRow; r++)
+            for (int c = 0; c < this.nbCol; c++)
+                this.empty.add(new Position(r, c));
 
-        for (int r = 1; r < this.grid.length - 1; r++)
-            for (int c = 1; c < this.grid[r].length - 1; c++)
-                this.grid[r][c] = Cell.EMPTY;
+        this.tail = new BodyPart(this.nbRow / 2, (this.nbCol / 2) - 2, RIGHT);
+        this.body = new ArrayDeque<>();
+        this.body.addFirst(this.tail.next(RIGHT));
+        this.head = this.body.getFirst().next(RIGHT);
 
-        Position head = new Position(this.grid.length / 2, this.grid[0].length / 2);
-        Position body = head.next(Direction.LEFT);
-        Position tail = body.next(Direction.LEFT);
+        this.empty.remove(this.tail);
+        this.empty.remove(this.body.getFirst());
+        this.empty.remove(this.head);
 
-        this.snake = new ArrayDeque<>();
-        this.snake.addFirst(tail);
-        this.snake.addFirst(body);
-        this.snake.addFirst(head);
-
-        this.grid[head.getR()][head.getC()] = Cell.SNAKE_HEAD;
-        this.grid[body.getR()][body.getC()] = Cell.SNAKE_BODY;
-        this.grid[tail.getR()][tail.getC()] = Cell.SNAKE_TAIL;
-
-        this.currentDirection = Direction.RIGHT;
-        this.nextDirection = Direction.RIGHT;
+        this.nextDirection = RIGHT;
 
         this.isAlive = true;
         this.isGrowing = false;
@@ -57,56 +52,54 @@ public class Game
         this.generateFood();
     }
 
-    public Cell[][] getGrid(){ return this.grid; }
+    public int getNbRow(){ return this.nbRow; }
+    public int getNbCol(){ return this.nbCol; }
+
+    public Set<Position> getEmpty(){ return this.empty; }
+    public Position getFood(){ return this.food; }
+
+    public BodyPart getHead(){ return this.head; }
+    public Queue<BodyPart> getBody(){ return this.body; }
+    public BodyPart getTail(){ return this.tail; }
+
     public boolean isOver(){ return !this.isAlive; }
 
     private void generateFood()
     {
-        List<Position> lstPosition = new ArrayList<>();
-
-        for (int r = 1; r < this.grid.length - 1; r++)
-            for (int c = 1; c < this.grid[r].length - 1; c++)
-                if (this.grid[r][c] == Cell.EMPTY)
-                    lstPosition.add(new Position(r, c));
-
-        Position food = lstPosition.get(R.nextInt(lstPosition.size()));
-        this.grid[food.getR()][food.getC()] = Cell.FOOD;
+        Position[] lstEmpty = this.empty.toArray(new Position[0]);
+        this.food = lstEmpty[R.nextInt(lstEmpty.length)];
     }
 
-    public void turn(Direction nextDirection)
+    public void turn(Direction direction)
     {
-        if (!nextDirection.isOpposite(this.currentDirection))
-            this.nextDirection = nextDirection;
+        if (!direction.isOpposite(this.head.getDirection()))
+            this.nextDirection = direction;
     }
 
     public void move()
     {
-        this.currentDirection = this.nextDirection;
+        // Add new head
+        this.body.addFirst(this.head);
+        this.head = this.head.next(this.nextDirection);
 
-        Position prevHead = this.snake.getFirst();
-        Position nextHead = prevHead.next(this.currentDirection);
-
-        if (this.grid[nextHead.getR()][nextHead.getC()] != Cell.EMPTY && this.grid[nextHead.getR()][nextHead.getC()] != Cell.FOOD)
+        if (!this.empty.contains(this.head))
         {
             this.isAlive = false;
             return;
         }
 
-        boolean willGrow = this.grid[nextHead.getR()][nextHead.getC()] == Cell.FOOD;
-        this.grid[prevHead.getR()][prevHead.getC()] = Cell.SNAKE_BODY;
-        this.grid[nextHead.getR()][nextHead.getC()] = Cell.SNAKE_HEAD;
-        this.snake.addFirst(nextHead);
+        this.empty.remove(this.head);
 
+        // Remove old tail
         if (!this.isGrowing)
         {
-            Position prevTail = this.snake.removeLast();
-            Position nextTail = this.snake.getLast();
-            this.grid[prevTail.getR()][prevTail.getC()] = Cell.EMPTY;
-            this.grid[nextTail.getR()][nextTail.getC()] = Cell.SNAKE_TAIL;
+            this.empty.add(this.tail);
+            this.tail = this.body.removeLast();
         }
 
-        this.isGrowing = willGrow;
-        if (willGrow)
+        // Detect growing
+        this.isGrowing = this.head.equals(this.food);
+        if (this.isGrowing)
             this.generateFood();
     }
 }

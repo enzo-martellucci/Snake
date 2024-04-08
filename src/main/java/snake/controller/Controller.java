@@ -16,7 +16,7 @@ public class Controller
 
     public Controller() throws InterruptedException, InvocationTargetException
     {
-        this.game = new Game();
+        this.game = new Game(21, 21);
         SwingUtilities.invokeAndWait(() -> this.view = new FrameGame(this, this.game));
 
         this.loop = new Timer(200, e -> this.move());
