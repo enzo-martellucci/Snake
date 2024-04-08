@@ -9,13 +9,16 @@ public class Game
 
     private Cell[][] grid;
     private Deque<Position> snake;
-    private Direction direction;
+
+    private Direction currentDirection;
+    private Direction nextDirection;
+
     private boolean isAlive;
     private boolean isGrowing;
 
     public Game()
     {
-        this.grid = new Cell[13][13];
+        this.grid = new Cell[21][21];
         for (int r = 0; r < this.grid.length; r++)
         {
             this.grid[r][0] = Cell.WALL;
@@ -45,7 +48,9 @@ public class Game
         this.grid[body.getR()][body.getC()] = Cell.SNAKE_BODY;
         this.grid[tail.getR()][tail.getC()] = Cell.SNAKE_TAIL;
 
-        this.direction = Direction.RIGHT;
+        this.currentDirection = Direction.RIGHT;
+        this.nextDirection = Direction.RIGHT;
+
         this.isAlive = true;
         this.isGrowing = false;
 
@@ -68,13 +73,18 @@ public class Game
         this.grid[food.getR()][food.getC()] = Cell.FOOD;
     }
 
-    public void move(Direction direction)
+    public void turn(Direction nextDirection)
     {
-        if (this.direction.isOpposite(direction))
-            return;
+        if (!nextDirection.isOpposite(this.currentDirection))
+            this.nextDirection = nextDirection;
+    }
+
+    public void move()
+    {
+        this.currentDirection = this.nextDirection;
 
         Position prevHead = this.snake.getFirst();
-        Position nextHead = prevHead.next(direction);
+        Position nextHead = prevHead.next(this.currentDirection);
 
         if (this.grid[nextHead.getR()][nextHead.getC()] != Cell.EMPTY && this.grid[nextHead.getR()][nextHead.getC()] != Cell.FOOD)
         {
@@ -86,8 +96,6 @@ public class Game
         this.grid[prevHead.getR()][prevHead.getC()] = Cell.SNAKE_BODY;
         this.grid[nextHead.getR()][nextHead.getC()] = Cell.SNAKE_HEAD;
         this.snake.addFirst(nextHead);
-
-        this.direction = direction;
 
         if (!this.isGrowing)
         {

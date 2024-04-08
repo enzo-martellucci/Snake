@@ -1,6 +1,6 @@
 package snake.view;
 
-import snake.Controller;
+import snake.controller.Controller;
 import snake.model.Cell;
 import snake.model.Direction;
 import snake.model.Game;
@@ -28,10 +28,10 @@ public class PanelGame extends JPanel
         inputMap.put(KeyStroke.getKeyStroke("LEFT"), "LEFT");
         inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "RIGHT");
         ActionMap actionMap = this.getActionMap();
-        actionMap.put("UP", new MoveAction(() -> this.ctrl.move(Direction.UP)));
-        actionMap.put("DOWN", new MoveAction(() -> this.ctrl.move(Direction.DOWN)));
-        actionMap.put("LEFT", new MoveAction(() -> this.ctrl.move(Direction.LEFT)));
-        actionMap.put("RIGHT", new MoveAction(() -> this.ctrl.move(Direction.RIGHT)));
+        actionMap.put("UP", new MoveAction(() -> this.ctrl.turn(Direction.UP)));
+        actionMap.put("DOWN", new MoveAction(() -> this.ctrl.turn(Direction.DOWN)));
+        actionMap.put("LEFT", new MoveAction(() -> this.ctrl.turn(Direction.LEFT)));
+        actionMap.put("RIGHT", new MoveAction(() -> this.ctrl.turn(Direction.RIGHT)));
 
         int size = (int) (Math.min(SCREEN.width, SCREEN.height) * 0.7);
         this.setPreferredSize(new Dimension(size, size));

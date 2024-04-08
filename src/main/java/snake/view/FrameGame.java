@@ -1,6 +1,6 @@
 package snake.view;
 
-import snake.Controller;
+import snake.controller.Controller;
 import snake.model.Game;
 
 import javax.swing.*;
