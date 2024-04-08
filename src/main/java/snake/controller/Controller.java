@@ -12,14 +12,14 @@ public class Controller
     private Game game;
     private FrameGame view;
 
-    private Loop loop;
+    private Timer loop;
 
     public Controller() throws InterruptedException, InvocationTargetException
     {
         this.game = new Game();
         SwingUtilities.invokeAndWait(() -> this.view = new FrameGame(this, this.game));
 
-        this.loop = new Loop(this, 200);
+        this.loop = new Timer(200, e -> this.move());
         this.loop.start();
     }
 
@@ -34,6 +34,6 @@ public class Controller
         if (!this.game.isOver())
             this.view.refreshGame();
         else
-            this.loop.interrupt();
+            this.loop.stop();
     }
 }
