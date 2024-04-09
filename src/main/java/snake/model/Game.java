@@ -8,9 +8,8 @@ public class Game
 {
     private static final Random R = new Random();
 
-
-    private int nbRow;
-    private int nbCol;
+    private final int nbRow;
+    private final int nbCol;
 
     private Set<Position> wall;
     private Set<Position> empty;
@@ -26,12 +25,22 @@ public class Game
 
     private Direction nextDirection;
 
+    private int bestScore;
+    private int score;
+
 
     public Game(int nbRow, int nbCol)
     {
         this.nbRow = nbRow + 2;
         this.nbCol = nbCol + 2;
 
+        this.bestScore = 0;
+        this.init();
+        this.generateFood();
+    }
+
+    public void init()
+    {
         this.wall = new HashSet<>();
         for (int r = 0; r < this.nbRow; r++)
         {
@@ -64,7 +73,7 @@ public class Game
         this.isGrowing = false;
         this.willGrow = false;
 
-        this.generateFood();
+        this.score = 0;
     }
 
     public int getNbRow(){ return this.nbRow; }
@@ -80,6 +89,9 @@ public class Game
 
     public boolean isOver(){ return !this.isAlive; }
     public boolean isGrowing(){ return this.isGrowing; }
+
+    public int getScore(){ return this.score; }
+    public int getBestScore(){ return this.bestScore; }
 
     private void generateFood()
     {
@@ -118,6 +130,10 @@ public class Game
         this.isGrowing = this.willGrow;
         this.willGrow = this.head.equals(this.food);
         if (this.willGrow)
+        {
+            this.score++;
+            this.bestScore = Math.max(this.bestScore, this.score);
             this.generateFood();
+        }
     }
 }
