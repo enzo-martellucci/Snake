@@ -13,13 +13,17 @@ public class Controller
     private FrameGame view;
 
     private Timer loop;
+    private int animationCount;
+    private int animationTotal;
 
-    public Controller() throws InterruptedException, InvocationTargetException
+    public Controller(int nbRow, int nbCol) throws InterruptedException, InvocationTargetException
     {
-        this.game = new Game(21, 21);
+        this.game = new Game(nbRow, nbCol);
         SwingUtilities.invokeAndWait(() -> this.view = new FrameGame(this, this.game));
 
-        this.loop = new Timer(200, e -> this.move());
+        this.loop = new Timer(16, e -> this.tick());
+        this.animationCount = 5;
+        this.animationTotal = 5;
         this.loop.start();
     }
 
@@ -28,12 +32,22 @@ public class Controller
         this.game.turn(direction);
     }
 
-    public void move()
+    private void tick()
     {
-        this.game.move();
-        if (!this.game.isOver())
-            this.view.refreshGame();
-        else
-            this.loop.stop();
+        if (this.animationCount == this.animationTotal)
+        {
+            this.animationCount = 0;
+            this.game.move();
+            if (this.game.isOver())
+                this.loop.stop();
+        }
+
+        this.view.refreshGame();
+        this.animationCount++;
+    }
+
+    public double getProgression()
+    {
+        return (double) this.animationCount / this.animationTotal;
     }
 }

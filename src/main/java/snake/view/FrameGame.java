@@ -5,7 +5,6 @@ import snake.model.Game;
 
 import javax.swing.*;
 import java.awt.*;
-
 public class FrameGame extends JFrame
 {
     public static final Dimension SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
@@ -26,6 +25,6 @@ public class FrameGame extends JFrame
 
     public void refreshGame()
     {
-        this.panelGame.refresh();
+        this.panelGame.repaint();
     }
 }

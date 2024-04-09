@@ -8,12 +8,11 @@ public class Main
     {
         try
         {
-            new Controller();
+            new Controller(13, 13);
         } catch (Exception e)
         {
             System.out.println("Couldn't start the game");
             System.out.println(e.getMessage());
-            throw new RuntimeException(e);
         }
     }
 }

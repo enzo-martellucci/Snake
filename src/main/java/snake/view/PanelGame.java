@@ -23,6 +23,7 @@ public class PanelGame extends JPanel
     private static final Color HEAD_TILE = new Color(0, 20, 125);
     private static final Color BODY_TILE = new Color(110, 115, 225);
     private static final Color TAIL_TILE = new Color(170, 145, 80);
+    private static final Color DEAD_TILE = Color.RED;
 
 
     private final Controller ctrl;
@@ -30,24 +31,26 @@ public class PanelGame extends JPanel
 
     public PanelGame(Controller ctrl, Game game)
     {
+        // Parameters
         this.ctrl = ctrl;
         this.game = game;
-
-        InputMap inputMap = this.getInputMap(WHEN_IN_FOCUSED_WINDOW);
-        inputMap.put(KeyStroke.getKeyStroke("UP"), "UP");
-        inputMap.put(KeyStroke.getKeyStroke("DOWN"), "DOWN");
-        inputMap.put(KeyStroke.getKeyStroke("LEFT"), "LEFT");
-        inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "RIGHT");
-        ActionMap actionMap = this.getActionMap();
-        actionMap.put("UP", new MoveAction(() -> this.ctrl.turn(Direction.UP)));
-        actionMap.put("DOWN", new MoveAction(() -> this.ctrl.turn(Direction.DOWN)));
-        actionMap.put("LEFT", new MoveAction(() -> this.ctrl.turn(Direction.LEFT)));
-        actionMap.put("RIGHT", new MoveAction(() -> this.ctrl.turn(Direction.RIGHT)));
 
         int size = (int) (Math.min(SCREEN.width, SCREEN.height) * 0.7);
         this.setPreferredSize(new Dimension(size, size));
 
         this.setBackground(Color.WHITE);
+
+        // Key bindings
+        InputMap inputMap = this.getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke("pressed UP"), "UP");
+        inputMap.put(KeyStroke.getKeyStroke("pressed DOWN"), "DOWN");
+        inputMap.put(KeyStroke.getKeyStroke("pressed LEFT"), "LEFT");
+        inputMap.put(KeyStroke.getKeyStroke("pressed RIGHT"), "RIGHT");
+        ActionMap actionMap = this.getActionMap();
+        actionMap.put("UP", new MoveAction(() -> this.ctrl.turn(Direction.UP)));
+        actionMap.put("DOWN", new MoveAction(() -> this.ctrl.turn(Direction.DOWN)));
+        actionMap.put("LEFT", new MoveAction(() -> this.ctrl.turn(Direction.LEFT)));
+        actionMap.put("RIGHT", new MoveAction(() -> this.ctrl.turn(Direction.RIGHT)));
     }
 
     @Override
@@ -55,47 +58,93 @@ public class PanelGame extends JPanel
     {
         super.paintComponent(g);
 
-        int row = this.game.getNbRow();
-        int col = this.game.getNbCol();
-        int tile = Math.min(this.getHeight() / (row + 4), this.getWidth() / (col + 4));
+        int w = this.getWidth(), h = this.getHeight();
+        int r = this.game.getNbRow(), c = this.game.getNbCol();
+        int tile = Math.min(h / r, w / c);
+        int progression = (int)(this.ctrl.getProgression() * tile);
 
-        // Drawing wall (Top, Bottom, Left, Right)
+        g.translate((w - (tile * c)) / 2, (h - (tile * r)) / 2);
+        this.paintWall(g, tile);
+        this.paintEmpty(g, tile);
+        this.paintFood(g, tile);
+        this.paintBody(g, tile);
+        this.paintHead(g, tile, progression);
+        this.paintTail(g, tile, progression);
+
+    }
+
+    private void paintWall(Graphics g, int tile)
+    {
         g.setColor(WALL_TILE);
-        g.fillRect(tile, tile, (col + 2) * tile, tile);
-        g.fillRect(tile, (row + 2) * tile, (col + 2) * tile, tile);
-        g.fillRect(tile, tile, tile, (row + 2) * tile);
-        g.fillRect((col + 2) * tile, tile, tile, (row + 2) * tile);
+        for (Position wall : this.game.getWall())
+            g.fillRect(wall.getR() * tile, wall.getC() * tile, tile, tile);
+    }
 
-        // Drawing empty cell (Odd / Even)
+    private void paintEmpty(Graphics g, int tile)
+    {
         for (Position empty : this.game.getEmpty())
         {
             g.setColor(empty.getR() % 2 == empty.getC() % 2 ? ODD_TILE : EVEN_TILE);
-            g.fillRect((empty.getC() + 2) * tile, (empty.getR() + 2) * tile, tile, tile);
+            g.fillRect(empty.getC() * tile, empty.getR() * tile, tile, tile);
         }
+    }
 
-        // Drawing food
+    private void paintFood(Graphics g, int tile)
+    {
         Position food = this.game.getFood();
         g.setColor(FOOD_TILE);
-        g.fillRect((food.getC() + 2) * tile, (food.getR() + 2) * tile, tile, tile);
+        g.fillRect(food.getC() * tile, food.getR() * tile, tile, tile);
+    }
 
-        // Drawing snake (Head, Tail, Body)
-        Position head = this.game.getHead();
-        g.setColor(HEAD_TILE);
-        g.fillRect((head.getC() + 2) * tile, (head.getR() + 2) * tile, tile, tile);
-
-        Position tail = this.game.getTail();
-        g.setColor(TAIL_TILE);
-        g.fillRect((tail.getC() + 2) * tile, (tail.getR() + 2) * tile, tile, tile);
-
+    private void paintBody(Graphics g, int tile)
+    {
         Queue<BodyPart> body = this.game.getBody();
         g.setColor(BODY_TILE);
         for (Position p : body)
-            g.fillRect((p.getC() + 2) * tile, (p.getR() + 2) * tile, tile, tile);
+            g.fillRect(p.getC() * tile, p.getR() * tile, tile, tile);
     }
 
-    public void refresh()
+    private void paintHead(Graphics g, int tile, int progression)
     {
-        this.repaint();
+        BodyPart head = this.game.getHead();
+        if (this.game.isOver())
+        {
+            g.setColor(DEAD_TILE);
+            g.fillRect(head.getC() * tile, head.getR() * tile, tile, tile);
+        } else
+        {
+            Color cbHead = head.getR() % 2 == head.getC() % 2 ? ODD_TILE : EVEN_TILE;
+            this.paintAnimation(g, tile, head, progression, cbHead, HEAD_TILE);
+        }
+    }
+
+    private void paintTail(Graphics g, int tile, int progression)
+    {
+        BodyPart tail = this.game.getTail();
+        if (this.game.isGrowing() || this.game.isOver())
+        {
+            g.setColor(TAIL_TILE);
+            g.fillRect(tail.getC() * tile, tail.getR() * tile, tile, tile);
+        } else
+            this.paintAnimation(g, tile, tail, progression, BODY_TILE, TAIL_TILE);
+    }
+
+    private void paintAnimation(Graphics g, int tile, BodyPart part, int progression, Color cB, Color cF)
+    {
+        int r = part.getR(), c = part.getC();
+        int offsetH = 0, offsetV = 0;
+        switch (part.getDirection())
+        {
+            case UP -> offsetV -= (progression - tile);
+            case DOWN -> offsetV += (progression - tile);
+            case LEFT -> offsetH -= (progression - tile);
+            case RIGHT -> offsetH += (progression - tile);
+        }
+
+        g.setColor(cB);
+        g.fillRect(c * tile, r * tile, tile, tile);
+        g.setColor(cF);
+        g.fillRect(c * tile + offsetH, r * tile + offsetV, tile, tile);
     }
 
     private static class MoveAction extends AbstractAction
