@@ -9,19 +9,14 @@ import java.awt.event.ActionEvent;
 
 public class PanelInfo extends JPanel
 {
-    private Controller ctrl;
-    private Game game;
+    private final Game game;
 
-    private JLabel lblInfo;
-    private JLabel lblScore;
-    private JLabel lblBestScore;
-
-    private GlobalAction startAction;
+    private final JLabel lblScore;
+    private final JLabel lblBestScore;
 
     public PanelInfo(Controller ctrl, Game game)
     {
         // Parameters
-        this.ctrl = ctrl;
         this.game = game;
 
         this.setBackground(Color.WHITE);
@@ -29,19 +24,16 @@ public class PanelInfo extends JPanel
         // Key bindings
         InputMap inputMap = this.getInputMap(WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStroke.getKeyStroke("pressed SPACE"), "SPACE");
-        inputMap.put(KeyStroke.getKeyStroke("pressed R"), "R");
         ActionMap actionMap = this.getActionMap();
-        this.startAction = new GlobalAction(this.ctrl::start);
-        actionMap.put("SPACE", this.startAction);
+        actionMap.put("SPACE", new GlobalAction(ctrl::start));
 
         // Components
-        this.lblInfo = new JLabel("Press SPACE to start / restart");
         this.lblScore = new JLabel("Score : " + this.game.getScore());
         this.lblBestScore = new JLabel("Best score : " + this.game.getBestScore());
 
         // Layout
         this.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
-        this.add(this.lblInfo);
+        this.add(new JLabel("Press SPACE to start / restart"));
         this.add(this.lblScore);
         this.add(this.lblBestScore);
     }
